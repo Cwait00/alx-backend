@@ -4,7 +4,6 @@ Deletion-resilient hypermedia pagination
 """
 
 import csv
-import math
 from typing import List, Dict, Any
 
 
@@ -65,9 +64,9 @@ class Server:
 
         return {
             "index": index,
-            "next_index": next_index,
+            "data": data,
             "page_size": len(data),
-            "data": data
+            "next_index": next_index
         }
 
 
