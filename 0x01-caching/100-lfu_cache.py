@@ -1,86 +1,80 @@
 #!/usr/bin/env python3
-""" LFUCache module
+"""
+LFUCache module implementing a Least Frequently Used (LFU) caching system.
 """
 
 from base_caching import BaseCaching
-from collections import defaultdict
-import time
 
 
 class LFUCache(BaseCaching):
-    """ LFUCache class
+    """
+    LFUCache class that inherits from BaseCaching and
+    implements an LFU caching system.
     """
 
     def __init__(self):
-        """ Initialize
+        """
+        Initialize the LFUCache class.
         """
         super().__init__()
-        self.usage_count = {}
-        self.frequency = defaultdict(list)
-        self.last_used = {}
+        self.freq = {}
+        self.usage_order = []
 
     def put(self, key, item):
-        """ Add an item in the cache
+        """
+        Add an item to the cache using the LFU algorithm.
+
+        Args:
+            key (str): The key of the item.
+            item (Any): The item to be stored in the cache.
         """
         if key is None or item is None:
             return
 
         if key in self.cache_data:
             self.cache_data[key] = item
-            self.usage_count[key] += 1
+            self.freq[key] += 1
+            self.usage_order.remove(key)
+            self.usage_order.append(key)
         else:
+            if len(self.cache_data) >= BaseCaching.MAX_ITEMS:
+                # Find the least frequently used item
+                lfu_key = min(
+                    self.freq,
+                    key=lambda k: (self.freq[k], self.usage_order.index(k))
+                )
+                self.cache_data.pop(lfu_key)
+                self.freq.pop(lfu_key)
+                self.usage_order.remove(lfu_key)
+                print(f"DISCARD: {lfu_key}")
+
             self.cache_data[key] = item
-            self.usage_count[key] = 1
-
-        self.update_frequency(key)
-        self.last_used[key] = time.time()
-
-        if len(self.cache_data) > BaseCaching.MAX_ITEMS:
-            self.evict()
+            self.freq[key] = 1
+            self.usage_order.append(key)
 
     def get(self, key):
-        """ Get an item by key
         """
-        if key in self.cache_data:
-            self.usage_count[key] += 1
-            self.update_frequency(key)
-            self.last_used[key] = time.time()
-            return self.cache_data[key]
-        else:
+        Retrieve an item from the cache.
+
+        Args:
+            key (str): The key of the item to retrieve.
+
+        Returns:
+            Any: The item associated with the key,
+            or None if the key is not found.
+        """
+        if key is None or key not in self.cache_data:
             return None
 
-    def update_frequency(self, key):
-        """ Update frequency dictionary
+        self.freq[key] += 1
+        self.usage_order.remove(key)
+        self.usage_order.append(key)
+        return self.cache_data[key]
+
+    def print_cache(self):
         """
-        count = self.usage_count[key]
-        if count - 1 in self.frequency:
-            self.frequency[count - 1].remove(key)
-            if not self.frequency[count - 1]:
-                del self.frequency[count - 1]
-
-        self.frequency[count].append(key)
-
-    def evict(self):
-        """ Evict least frequency used item
+        Print the current state of the cache.
         """
-        min_frequency = min(self.frequency)
-        keys_to_evict = self.frequency[min_frequency]
-
-        if len(keys_to_evict) > 1:
-
-            least_recently_used = min(
-                keys_to_evict,
-                key=lambda k: self.last_used[k]
-            )
-            keys_to_evict.remove(least_recently_used)
-        else:
-            least_recently_used = keys_to_evict.pop(0)
-
-        del self.cache_data[least_recently_used]
-        del self.usage_count[least_recently_used]
-        del self.last_used[least_recently_used]
-
-        if not self.frequency[min_frequency]:
-            del self.frequency[min_frequency]
-
-        print(f"DISCARD: {least_recently_used}")
+        print("Current cache:")
+        for key, value in self.cache_data.items():
+            print(f"{key}: {value}")
