@@ -78,28 +78,3 @@ class LFUCache(BaseCaching):
         print("Current cache:")
         for key, value in self.cache_data.items():
             print(f"{key}: {value}")
-
-
-# Assuming base_caching.py defines BaseCaching with MAX_ITEMS = 5
-class BaseCaching:
-    MAX_ITEMS = 5
-
-    def __init__(self):
-        self.cache_data = {}
-
-# Test the LFUCache with 10 items
-if __name__ == "__main__":
-    lfu_cache = LFUCache()
-    
-    # Add 10 items to the cache
-    for i in range(10):
-        key = f"key-{i}"
-        value = f"value-{i}"
-        lfu_cache.put(key, value)
-        lfu_cache.print_cache()
-
-    # Access some of the items to change their frequency
-    for i in range(5):
-        lfu_cache.get(f"key-{i % 5}")
-    
-    lfu_cache.print_cache()
