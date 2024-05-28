@@ -4,9 +4,8 @@ A Flask app with Babel setup for internationalization, locale detection,
 template parametrization, forced locale via URL parameter, and mock login.
 """
 
-
 from flask import Flask, render_template, request, g
-from flask_babel import Babel, _
+from flask_babel import Babel, _, format_datetime
 from datetime import datetime
 import pytz
 
@@ -75,12 +74,16 @@ def get_locale() -> str:
 @babel.timezoneselector
 def get_timezone() -> str:
     """
-    Determine the user's timezone.
+    Determine the best match for the user's timezone or use the timezone from
+    the URL parameters if provided and valid.
 
     Returns:
-        str: Timezone string.
+        str: Best match timezone or the forced timezone.
     """
-    if g.user:
+    timezone = request.args.get('timezone')
+    if timezone:
+        return timezone
+    if g.user and g.user['timezone']:
         return g.user['timezone']
     return app.config['BABEL_DEFAULT_TIMEZONE']
 
@@ -93,10 +96,8 @@ def index() -> str:
     Returns:
         str: Rendered HTML template.
     """
-    user_timezone = pytz.timezone(get_timezone())
-    current_time = datetime.now(user_timezone)
-    formatted_time = current_time.strftime('%Y-%m-%d %H:%M:%S')
-    return render_template('5-index.html', current_time=formatted_time)
+    current_time = format_datetime(datetime.now(pytz.timezone(get_timezone())))
+    return render_template('5-index.html', current_time=current_time)
 
 
 if __name__ == '__main__':
