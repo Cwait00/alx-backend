@@ -62,6 +62,7 @@ describe('createPushNotificationsJobs', () => {
     createPushNotificationsJobs(jobs, queue);
 
     const job = queue.testMode.jobs[0];
+
     job._events.complete();
 
     expect(consoleLogStub.calledWith(`Notification job created: ${job.id}`)).to.be.true;
